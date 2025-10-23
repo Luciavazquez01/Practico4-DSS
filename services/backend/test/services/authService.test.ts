@@ -66,12 +66,11 @@ describe('AuthService.generateJwt', () => {
     });
 
     expect(nodemailer.createTransport).toHaveBeenCalled();
-    expect(nodemailer.createTransport().sendMail).toHaveBeenCalledWith(expect.objectContaining({
-      from: "info@example.com",
+    expect(nodemailer.createTransport().sendMail).toHaveBeenCalledWith({
       to: user.email,
       subject: 'Activate your account',
-      html: expect.stringContaining('Click <a href=')
-    }));
+      html: expect.stringContaining('Click <a href="')
+    });
   }
   );
 
@@ -158,7 +157,7 @@ describe('AuthService.generateJwt', () => {
 
     // Call the method to test
     const user = await AuthService.authenticate(email, password);
-    expect(getUserChain.where).toHaveBeenCalledWith({username : 'username'});
+    expect(getUserChain.where).toHaveBeenCalledWith({email : 'username'});
     expect(user).toBeDefined();
   });
 
@@ -189,7 +188,7 @@ describe('AuthService.generateJwt', () => {
     mockedDb.mockReturnValueOnce(getUserChain as any);
 
     // Call the method to test
-    await expect(AuthService.authenticate('username', 'password123')).rejects.toThrow('Invalid username or not activated');
+    await expect(AuthService.authenticate('username', 'password123')).rejects.toThrow('Invalid email or not activated');
   });
 
   it('sendResetPasswordEmail', async () => {
@@ -317,8 +316,7 @@ describe('AuthService.generateJwt', () => {
     expect(updateChain.update).toHaveBeenCalledWith({
       password: password,
       invite_token: null,
-      invite_token_expires: null,
-      activated:true
+      invite_token_expires: null
     });
 
     expect(updateChain.where).toHaveBeenCalledWith({ id: user_id });
