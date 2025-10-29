@@ -13,20 +13,30 @@ interface InvoiceRow {
   status: string;
 }
 
-class InvoiceService {
-  static async list( userId: string, status?: string, operator?: string): Promise<Invoice[]> {
-    let q = db<InvoiceRow>('invoices').where({ userId: userId });
-    if (status) q = q.andWhereRaw(" status "+ operator + " '"+ status +"'");
+
+  class InvoiceService {
+  static async list(userId: string, status?: string, operator?: string): Promise<Invoice[]> {
+    let q = db<InvoiceRow>('invoices').where({ userId });
+
+    if (status) {
+      const allowedOps = new Set(['=', '!=', '<', '<=', '>', '>=', 'like', 'ilike']);
+      const op = operator && allowedOps.has(operator.toLowerCase()) ? operator.toLowerCase() : '=';
+
+      q = q.andWhere('status', op as any, status);
+    }
+
     const rows = await q.select();
-    const invoices = rows.map(row => ({
+
+    return rows.map(row => ({
       id: row.id,
       userId: row.userId,
       amount: row.amount,
       dueDate: row.dueDate,
-      status: row.status} as Invoice
-    ));
-    return invoices;
+      status: row.status
+    } as Invoice));
   }
+
+
 
   static async setPaymentCard(
     userId: string,
