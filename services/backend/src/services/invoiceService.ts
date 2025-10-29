@@ -26,7 +26,7 @@ class InvoiceService {
       status: row.status} as Invoice
     ));
     return invoices;
-  }
+  }           
 
   static async setPaymentCard(
     userId: string,
