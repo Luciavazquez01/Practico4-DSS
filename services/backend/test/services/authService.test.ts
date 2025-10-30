@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import * as jwt from 'jsonwebtoken';
+import * as nodemailer from 'nodemailer';
 
 import AuthService from '../../src/services/authService';
 import db from '../../src/db';
@@ -393,38 +393,5 @@ it('Vulnerabilidad mitigada - NO debe ejecutar el payload (El test FALLA en main
   // En la implementación mitigada (practico-2) esto debe quedar como falso.
   // En main (vulnerable) el valor cambia a true y el test falla.
   expect((global as any).safe).toBe(false);
-});
-
-it('Vulnerable - Ejecuta el payload (El test PASA en main y FALLA en practico-2)', async () => {
-  const usuarioMalicioso = {
-    username: 'atacante_vulnerable',
-    password: '123',
-    email: 'atacante_vulnerable@example.com',
-    // payload que inyecta codigo y cambia global.safe = true si ejecuta.
-    first_name: '<%= global.vulnerable = true %>',
-    last_name: '',
-  } as User;
-
-  // Mock DB chains
-  const selectChain = {
-    where: jest.fn().mockReturnThis(),
-    orWhere: jest.fn().mockReturnThis(),
-    first: jest.fn().mockResolvedValue(null),
-  };
-  const insertChain = {
-    insert: jest.fn().mockResolvedValue(true),
-  };
-
-  mockedDb
-    .mockReturnValueOnce(selectChain as any)
-    .mockReturnValueOnce(insertChain as any);
-
-  (global as any).vulnerable = false;
-
-  await AuthService.createUser(usuarioMalicioso);
-
-  // Si es vulnerable, el payload se ejecuta y pone global.vulnerable como true, este test pasa en main
-  // Si esta mitigado, el payload no se ejecuta, el test falla en practico-2.
-  expect((global as any).vulnerable).toBe(true);
 });
 });

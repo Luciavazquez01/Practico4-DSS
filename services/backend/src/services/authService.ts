@@ -1,6 +1,6 @@
 
-import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import * as crypto from 'crypto';
+import * as nodemailer from 'nodemailer';
 import db from '../db';
 import { User,UserRow } from '../types/user';
 import jwtUtils from '../utils/jwt';
