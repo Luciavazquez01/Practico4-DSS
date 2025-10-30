@@ -348,4 +348,48 @@ describe('AuthService.generateJwt', () => {
     expect((decoded as any).id).toBe(userId);
   });
 
+  /**
+ * Tests para Template Injection
+ *
+ * - "Vulnerabilidad mitigada - NO debe ejecutar el payload"
+ *    El test FALLA en main y PASA en practico-2
+ *
+ * - "Vulnerable - Ejecuta el payload"
+ *    El test PASA en main y FALLA en practico-2.
+ */
+
+
+it('Vulnerabilidad mitigada - NO debe ejecutar el payload (El test FALLA en main y PASA en practico-2)', async () => {
+  const usuarioMalicioso = {
+    username: 'atacante_mitigado',
+    password: '123',
+    email: 'atacante_mitigado@example.com',
+    // payload que inyecta codigo y cambia global.safe = true si ejecuta.
+    first_name: '<%= global.safe = true %>',
+    last_name: '',
+  } as User;
+
+  // Mock DB para que al crear usuario se mande el mail
+  const selectChain = {
+    where: jest.fn().mockReturnThis(),
+    orWhere: jest.fn().mockReturnThis(),
+    first: jest.fn().mockResolvedValue(null), 
+  };
+  const insertChain = {
+    insert: jest.fn().mockResolvedValue(true),
+  };
+
+  mockedDb
+    .mockReturnValueOnce(selectChain as any)   // verificar que existe
+    .mockReturnValueOnce(insertChain as any);  // insertar
+
+  // ensure clean state
+  (global as any).safe = false;
+
+  await AuthService.createUser(usuarioMalicioso);
+
+  // En la implementación mitigada (practico-2) esto debe quedar como falso.
+  // En main (vulnerable) el valor cambia a true y el test falla.
+  expect((global as any).safe).toBe(false);
+});
 });
